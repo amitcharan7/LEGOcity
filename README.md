@@ -1,4 +1,4 @@
-from sense_emu import SenseHat
+from sense_hat import SenseHat
 import paho.mqtt.client as paho
 from time import sleep
 
@@ -31,16 +31,21 @@ def read_magnetometer():
 
 # MQTT callbacks
 def on_connect(client, userdata, flags, rc):
-    print(f"Connected with result code {rc}")
+    if rc == 0:
+        print("Connected to MQTT broker successfully!")
+    else:
+        print(f"Failed to connect, return code {rc}")
 
 def on_publish(client, userdata, mid):
-    print(f"Published message ID: {mid}")
+    print(f"Publishing message with ID: {mid}")
 
 # Create MQTT client and connect
 client = paho.Client()
 client.on_connect = on_connect
 client.on_publish = on_publish
 client.connect(broker, port, 60)
+
+# Start the loop to manage connections and messages
 client.loop_start()
 
 while True:
@@ -51,21 +56,24 @@ while True:
     heading, direction = read_magnetometer()
 
     # Publish sensor data to different topics with descriptive text
-    temp_message = f"The temperature is {temperature}°C."
+    temp_message = f"Topic: sensor/temperature - The temperature is {temperature}°C."
     client.publish("sensor/temperature", payload=temp_message, qos=1)
-    print(f"Publishing {temp_message}")
+    print(f"\n{temp_message}")
 
-    pressure_message = f"The barometric pressure is {pressure} hPa."
+    pressure_message = f"Topic: sensor/pressure - The barometric pressure is {pressure} hPa."
     client.publish("sensor/pressure", payload=pressure_message, qos=1)
-    print(f"Publishing {pressure_message}")
+    print(f"\n{pressure_message}")
 
-    humidity_message = f"The humidity level is {humidity}%. "
+    humidity_message = f"Topic: sensor/humidity - The humidity level is {humidity} %."
     client.publish("sensor/humidity", payload=humidity_message, qos=1)
-    print(f"Publishing {humidity_message}")
+    print(f"\n{humidity_message}")
 
-    magnetometer_message = f"The magnetometer heading is {heading}° ({direction})."
+    magnetometer_message = f"Topic: sensor/magnetometer - The magnetometer heading is {heading}° ({direction})."
     client.publish("sensor/magnetometer", payload=magnetometer_message, qos=1)
-    print(f"Publishing {magnetometer_message}")
+    print(f"\n{magnetometer_message}")
+
+    # Line break for readability with custom text
+    print("\n------------------------------ Publishing the topics ------------------------------")
 
     # Sleep for 1 second before publishing again
     sleep(1)
